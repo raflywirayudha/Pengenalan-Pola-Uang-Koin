@@ -1,0 +1,10 @@
+               precision    recall  f1-score   support
+
+1000_belakang       0.44      0.67      0.53         6
+   1000_depan       0.25      0.33      0.29         6
+ 500_belakang       0.67      0.67      0.67         6
+    500_depan       0.00      0.00      0.00         6
+
+     accuracy                           0.42        24
+    macro avg       0.34      0.42      0.37        24
+ weighted avg       0.34      0.42      0.37        24

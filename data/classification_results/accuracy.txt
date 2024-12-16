@@ -1,0 +1,1 @@
+Akurasi Model: 41.67%
