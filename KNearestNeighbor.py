@@ -52,7 +52,7 @@ def load_and_prepare_data():
 
 def train_and_evaluate_knn(X_train, X_test, y_train, y_test, label_encoder):
     # Inisialisasi dan latih model KNN
-    knn = KNeighborsClassifier(n_neighbors=5)
+    knn = KNeighborsClassifier(n_neighbors=3)
     knn.fit(X_train, y_train)
     
     # Prediksi
