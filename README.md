@@ -114,8 +114,10 @@ From the tests conducted:
 
 ---
 
-## 📬 **Author**
-**Rafly Wirayudha**  
+## 📬 **Authors**
+- **Ahmad Kurniawan**  
+- **Farras Latief**  
+- **Muhammad Rafly Wirayudha**  
 *Informatics Engineering, UIN Suska Riau*
 
 ---
