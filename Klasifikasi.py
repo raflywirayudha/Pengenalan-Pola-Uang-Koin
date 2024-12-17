@@ -1,23 +1,22 @@
 import os
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Tambahkan library untuk Neural Networks
-from sklearn.neural_network import MLPClassifier  # BPNN
-from minisom import MiniSom  # LVQ (menggunakan MiniSom sebagai implementasi serupa)
-
 # Buat folder untuk menyimpan hasil visualisasi
-output_folder = 'data/classification_results'
+output_folder = 'data/hasil_klasifikasi'
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
-def load_and_prepare_data():
+def load_and_prepare_data(test_size):
+    """
+    Load data dan persiapkan dengan rasio train-test yang berbeda
+    """
     # Baca data dari CSV
     df = pd.read_csv('coin_features.csv')
     
@@ -36,143 +35,123 @@ def load_and_prepare_data():
     # Stratified split dengan mempertahankan proporsi kelas
     X_train, X_test, y_train, y_test = train_test_split(
         X_scaled, y_encoded,
-        test_size=0.3,          # 20% untuk testing
-        random_state=42,        # untuk reproducibility
-        stratify=y_encoded      # memastikan proporsi kelas seimbang
+        test_size=test_size,         # Rasio yang akan diuji
+        random_state=42,             # untuk reproducibility
+        stratify=y_encoded           # memastikan proporsi kelas seimbang
     )
     
     # Verifikasi jumlah sampel per kelas
     train_distribution = pd.Series(label_encoder.inverse_transform(y_train)).value_counts()
     test_distribution = pd.Series(label_encoder.inverse_transform(y_test)).value_counts()
     
-    print("\nDistribusi data training:")
+    print(f"\nDistribusi data training (test_size={test_size}):")
     print(train_distribution)
-    print("\nDistribusi data testing:")
+    print(f"\nDistribusi data testing (test_size={test_size}):")
     print(test_distribution)
     
     return X_train, X_test, y_train, y_test, X_scaled, y_encoded, scaler, label_encoder
 
-def custom_lvq(X_train, y_train, X_test, learning_rate=0.1, iterations=100):
+def evaluate_model(model_name, y_test, y_pred, label_encoder, test_size):
     """
-    Implementasi sederhana Learning Vector Quantization (LVQ)
+    Evaluasi model dengan menyimpan hasil dan visualisasi
     """
-    # Inisialisasi prototype vectors (mengambil sampel dari setiap kelas)
-    unique_classes = np.unique(y_train)
-    prototypes = []
-    prototype_labels = []
+    # Buat subfolder untuk setiap rasio split
+    split_folder = os.path.join(output_folder, f'datauji_{int(test_size*100)}')
+    os.makedirs(split_folder, exist_ok=True)
     
-    for cls in unique_classes:
-        # Ambil sampel dari kelas tersebut
-        class_samples = X_train[y_train == cls]
-        # Pilih prototype sebagai centroid
-        prototype = np.mean(class_samples, axis=0)
-        prototypes.append(prototype)
-        prototype_labels.append(cls)
-    
-    prototypes = np.array(prototypes)
-    prototype_labels = np.array(prototype_labels)
-    
-    # Proses training
-    for _ in range(iterations):
-        for i, sample in enumerate(X_train):
-            # Cari prototype terdekat
-            distances = np.linalg.norm(prototypes - sample, axis=1)
-            closest_prototype_idx = np.argmin(distances)
-            
-            # Update prototype
-            if prototype_labels[closest_prototype_idx] == y_train[i]:
-                # Gerakkan prototype mendekati sampel
-                prototypes[closest_prototype_idx] += learning_rate * (sample - prototypes[closest_prototype_idx])
-            else:
-                # Gerakkan prototype menjauhi sampel
-                prototypes[closest_prototype_idx] -= learning_rate * (sample - prototypes[closest_prototype_idx])
-    
-    # Prediksi
-    predictions = []
-    for sample in X_test:
-        distances = np.linalg.norm(prototypes - sample, axis=1)
-        closest_prototype_idx = np.argmin(distances)
-        predictions.append(prototype_labels[closest_prototype_idx])
-    
-    return np.array(predictions)
-
-def evaluate_model(model_name, y_test, y_pred, label_encoder):
     # Transform kembali ke label asli untuk hasil
     y_test_original = label_encoder.inverse_transform(y_test)
     y_pred_original = label_encoder.inverse_transform(y_pred)
     
     # Simpan hasil klasifikasi
     results_df = pd.DataFrame({
-        'Actual': y_test_original,
-        'Predicted': y_pred_original
+        'Asli': y_test_original,
+        'Prediksi': y_pred_original
     })
-    results_df.to_csv(f'data/classification_results/{model_name}_results.csv', index=False)
+    results_df.to_csv(os.path.join(split_folder, f'{model_name}_results.csv'), index=False)
     
     # Buat confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
     plt.figure(figsize=(10, 8))
+    cm = confusion_matrix(y_test, y_pred)
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
                 xticklabels=label_encoder.classes_, 
                 yticklabels=label_encoder.classes_)
-    plt.title(f'Confusion Matrix - {model_name}')
-    plt.xlabel('Predicted')
-    plt.ylabel('Actual')
+    plt.title(f'Confusion Matrix - {model_name} (Data Uji: {int(test_size*100)}%)')
+    plt.xlabel('Prediksi')
+    plt.ylabel('Asli')
     plt.tight_layout()
-    plt.savefig(f'data/classification_results/{model_name}_confusion_matrix.png')
+    plt.savefig(os.path.join(split_folder, f'{model_name}_confusion_matrix.png'))
     plt.close()
     
     # Hitung akurasi
     accuracy = accuracy_score(y_test, y_pred)
     accuracy_percentage = accuracy * 100
     
-    print(f"\n{model_name} Results:")
+    print(f"\n{model_name} Hasil (Data Uji: {int(test_size*100)}%):")
     print(f"Akurasi Model: {accuracy_percentage:.2f}%")
     
     # Simpan laporan klasifikasi
     report = classification_report(y_test_original, y_pred_original, zero_division=1)
-    with open(f'data/classification_results/{model_name}_classification_report.txt', 'w') as f:
+    with open(os.path.join(split_folder, f'{model_name}_classification_report.txt'), 'w') as f:
         f.write(f"Akurasi Model: {accuracy_percentage:.2f}%\n\n")
         f.write(report)
     
     return accuracy_percentage, results_df
 
 def main():
-    # Load dan prepare data
-    X_train, X_test, y_train, y_test, X_scaled, y_encoded, scaler, label_encoder = load_and_prepare_data()
+    # Rasio split yang akan diuji
+    test_sizes = [0.3, 0.2, 0.1]
     
-    # Model-model yang akan dievaluasi
-    models = [
-        ('KNN', KNeighborsClassifier(n_neighbors=3)),
-        ('BPNN', MLPClassifier(
-            hidden_layer_sizes=(10, 5),  # 2 hidden layers
-            max_iter=2000, 
-            random_state=42
-        ))
-    ]
+    # Simpan hasil untuk semua percobaan
+    all_results = {}
     
-    # Evaluasi KNN dan BPNN
-    results = {}
-    for name, model in models:
-        # Latih model
-        model.fit(X_train, y_train)
+    for test_size in test_sizes:
+        print(f"\n--- Pengujian dengan Test Size {int(test_size*100)}% ---")
         
-        # Prediksi
-        y_pred = model.predict(X_test)
+        # Load dan prepare data
+        X_train, X_test, y_train, y_test, X_scaled, y_encoded, scaler, label_encoder = load_and_prepare_data(test_size)
         
-        # Evaluasi
-        accuracy, result_df = evaluate_model(name, y_test, y_pred, label_encoder)
-        results[name] = {'accuracy': accuracy, 'results': result_df}
+        # Gunakan KNN dengan berbagai parameter
+        knn_params = [
+            ('KNN-3', KNeighborsClassifier(n_neighbors=3)),
+            ('KNN-5', KNeighborsClassifier(n_neighbors=5)),
+            ('KNN-7', KNeighborsClassifier(n_neighbors=7))
+        ]
+        
+        # Evaluasi KNN
+        results = {}
+        for name, model in knn_params:
+            # Latih model
+            model.fit(X_train, y_train)
+            
+            # Prediksi
+            y_pred = model.predict(X_test)
+            
+            # Evaluasi
+            accuracy, result_df = evaluate_model(name, y_test, y_pred, label_encoder, test_size)
+            results[name] = {'Akurasi': accuracy, 'Hasil': result_df}
+        
+        # Temukan model terbaik untuk split ini
+        best_model = max(results, key=lambda x: results[x]['Akurasi'])
+        print(f"\nModel terbaik untuk split {int(test_size*100)}%: {best_model} dengan akurasi {results[best_model]['Akurasi']:.2f}%")
+        
+        # Simpan hasil untuk keseluruhan pengujian
+        all_results[f'datauji_{int(test_size*100)}'] = results
     
-    # Evaluasi LVQ
-    y_pred_lvq = custom_lvq(X_train, y_train, X_test)
-    accuracy_lvq, result_df_lvq = evaluate_model('LVQ', y_test, y_pred_lvq, label_encoder)
-    results['LVQ'] = {'accuracy': accuracy_lvq, 'results': result_df_lvq}
+    # Buat ringkasan hasil
+    summary_results = []
+    for split, models in all_results.items():
+        for model, data in models.items():
+            summary_results.append({
+                'Split': split,
+                'Model': model,
+                'Akurasi': data['Akurasi']
+            })
     
-    # Temukan model terbaik
-    best_model = max(results, key=lambda x: results[x]['accuracy'])
-    print(f"\nModel terbaik: {best_model} dengan akurasi {results[best_model]['accuracy']:.2f}%")
+    summary_df = pd.DataFrame(summary_results)
+    summary_df.to_csv(os.path.join(output_folder, 'rangkuman_akurasi.csv'), index=False)
     
-    print("\nKlasifikasi selesai! Hasil tersimpan di folder 'data/classification_results'")
+    print("\nKlasifikasi selesai! Hasil tersimpan di folder 'data/hasil_klasifikasi'")
 
 if __name__ == "__main__":
     main()

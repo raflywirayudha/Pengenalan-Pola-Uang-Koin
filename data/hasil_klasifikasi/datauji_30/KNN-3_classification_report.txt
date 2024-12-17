@@ -1,0 +1,12 @@
+Akurasi Model: 50.00%
+
+              precision    recall  f1-score   support
+
+       1000A       0.38      0.60      0.46         5
+       1000B       0.50      0.75      0.60         4
+        500A       0.00      0.00      0.00         5
+        500B       1.00      0.75      0.86         4
+
+    accuracy                           0.50        18
+   macro avg       0.47      0.53      0.48        18
+weighted avg       0.44      0.50      0.45        18
