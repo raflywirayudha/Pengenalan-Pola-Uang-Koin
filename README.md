@@ -7,6 +7,26 @@ The dataset was split into training and testing sets, and the KNN algorithm's ac
 
 ---
 
+## ⚙️ **Data Preprocessing and Feature Extraction**
+### 🔄 **Preprocessing**
+The data preprocessing steps included:
+1. **Label Encoding**: The categorical labels (coins) were encoded into numerical values using `LabelEncoder` from scikit-learn.
+2. **Feature Scaling**: The features were normalized using `StandardScaler` to standardize them (mean = 0, variance = 1) for optimal performance of the KNN algorithm.
+
+### 🧮 **Feature Extraction**
+The following features were extracted from the dataset for use in model training:
+- **Edge Count**
+- **Edge Area**
+- **Contrast**
+- **Dissimilarity**
+- **Homogeneity**
+- **Edge Mean**
+- **Edge Std**
+- **Contour Count**
+- **Total Contour Area**
+
+These features were used to represent the characteristics of the coins, which are crucial for classification tasks.
+
 ## 🔂 **Data Distribution**
 ### 🔁 **Test Size: 30%**
 **Training Data Distribution:**
