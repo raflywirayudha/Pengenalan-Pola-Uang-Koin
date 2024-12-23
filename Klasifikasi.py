@@ -18,10 +18,16 @@ def load_and_prepare_data(test_size):
     Load data dan persiapkan dengan rasio train-test yang berbeda
     """
     # Baca data dari CSV
-    df = pd.read_csv('coin_features.csv')
+    df = pd.read_csv('hasil_ekstraksi_fitur_koin.csv')
     
     # Pisahkan fitur dan label
-    X = df[['Edge Count', 'Edge Area', 'Aspect Ratio']].values
+    features = [
+        'Edge Count', 'Edge Area', 'Contrast', 'Dissimilarity', 
+        'Homogeneity', 'Edge Mean', 'Edge Std', 'Contour Count', 
+        'Total Contour Area'
+    ]
+    
+    X = df[features].values
     y = df['Coin'].values
     
     # Encode label kategorikal menjadi numerik
@@ -35,9 +41,9 @@ def load_and_prepare_data(test_size):
     # Stratified split dengan mempertahankan proporsi kelas
     X_train, X_test, y_train, y_test = train_test_split(
         X_scaled, y_encoded,
-        test_size=test_size,         # Rasio yang akan diuji
-        random_state=42,             # untuk reproducibility
-        stratify=y_encoded           # memastikan proporsi kelas seimbang
+        test_size=test_size,
+        random_state=42,
+        stratify=y_encoded
     )
     
     # Verifikasi jumlah sampel per kelas
