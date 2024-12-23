@@ -117,42 +117,37 @@ def main():
         # Load dan prepare data
         X_train, X_test, y_train, y_test, X_scaled, y_encoded, scaler, label_encoder = load_and_prepare_data(test_size)
         
-        # Gunakan KNN dengan berbagai parameter
-        knn_params = [
-            ('KNN-3', KNeighborsClassifier(n_neighbors=3)),
-            ('KNN-5', KNeighborsClassifier(n_neighbors=5)),
-            ('KNN-7', KNeighborsClassifier(n_neighbors=7))
-        ]
+        # Tetapkan KNN dengan k=3
+        model_name = 'KNN-3'
+        knn = KNeighborsClassifier(n_neighbors=3)
         
-        # Evaluasi KNN
-        results = {}
-        for name, model in knn_params:
-            # Latih model
-            model.fit(X_train, y_train)
-            
-            # Prediksi
-            y_pred = model.predict(X_test)
-            
-            # Evaluasi
-            accuracy, result_df = evaluate_model(name, y_test, y_pred, label_encoder, test_size)
-            results[name] = {'Akurasi': accuracy, 'Hasil': result_df}
+        # Latih model
+        knn.fit(X_train, y_train)
         
-        # Temukan model terbaik untuk split ini
-        best_model = max(results, key=lambda x: results[x]['Akurasi'])
-        print(f"\nModel terbaik untuk split {int(test_size*100)}%: {best_model} dengan akurasi {results[best_model]['Akurasi']:.2f}%")
+        # Prediksi
+        y_pred = knn.predict(X_test)
+        
+        # Evaluasi
+        accuracy, result_df = evaluate_model(model_name, y_test, y_pred, label_encoder, test_size)
+        
+        print(f"\nHasil {model_name} untuk split {int(test_size*100)}%:")
+        print(f"Akurasi: {accuracy:.2f}%")
         
         # Simpan hasil untuk keseluruhan pengujian
-        all_results[f'datauji_{int(test_size*100)}'] = results
+        all_results[f'datauji_{int(test_size*100)}'] = {
+            'Model': model_name,
+            'Akurasi': accuracy,
+            'Hasil': result_df
+        }
     
     # Buat ringkasan hasil
     summary_results = []
-    for split, models in all_results.items():
-        for model, data in models.items():
-            summary_results.append({
-                'Split': split,
-                'Model': model,
-                'Akurasi': data['Akurasi']
-            })
+    for split, data in all_results.items():
+        summary_results.append({
+            'Split': split,
+            'Model': data['Model'],
+            'Akurasi': data['Akurasi']
+        })
     
     summary_df = pd.DataFrame(summary_results)
     summary_df.to_csv(os.path.join(output_folder, 'rangkuman_akurasi.csv'), index=False)

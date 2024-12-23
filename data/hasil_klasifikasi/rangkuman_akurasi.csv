@@ -1,10 +1,4 @@
 Split,Model,Akurasi
-datauji_30,KNN-3,25.0
-datauji_30,KNN-5,33.33333333333333
-datauji_30,KNN-7,41.66666666666667
-datauji_20,KNN-3,12.5
-datauji_20,KNN-5,37.5
-datauji_20,KNN-7,62.5
-datauji_10,KNN-3,25.0
-datauji_10,KNN-5,75.0
-datauji_10,KNN-7,75.0
+datauji_30,KNN-3,50.0
+datauji_20,KNN-3,50.0
+datauji_10,KNN-3,75.0
