@@ -56,6 +56,13 @@ def extract_advanced_features(image_path):
     contour_count = len(contours)
     total_contour_area = sum(cv2.contourArea(cnt) for cnt in contours)
 
+    # Simpan hasil preprocessing
+    cv2.imwrite(os.path.join(output_folders['grayscale'], os.path.basename(image_path)), image)
+    cv2.imwrite(os.path.join(output_folders['bilateral'], os.path.basename(image_path)), bilateral)
+    cv2.imwrite(os.path.join(output_folders['gaussian'], os.path.basename(image_path)), blurred)
+    cv2.imwrite(os.path.join(output_folders['canny'], os.path.basename(image_path)), canny)
+    cv2.imwrite(os.path.join(output_folders['morphology'], os.path.basename(image_path)), morph)
+
     # Menggabungkan semua fitur untuk dikembalikan
     return {
         'image_name': os.path.basename(image_path),
@@ -69,6 +76,8 @@ def extract_advanced_features(image_path):
         'contour_count': contour_count,
         'total_contour_area': total_contour_area
     }
+
+    
 
 def process_coin_dataset():
     # File CSV
